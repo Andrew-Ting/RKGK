@@ -28,7 +28,6 @@ I assume [CMake](https://cmake.org/) and [Visual Studio 2022](https://visualstud
 ```
 git submodule update --init --recursive # initialize and update git submodules
 cmake . --preset default # configure the CMake build with the default Visual Studio 2022 Cmake preset
-cmake --build ./build # build the Visual Studio solution
 ```
 3. Under the newly generated `build/` directory, open `RKGK.sln`
 4. With Visual Studio 2022 in focus, press F5 to run a debug build
