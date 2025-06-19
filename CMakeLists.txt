@@ -1,4 +1,6 @@
 cmake_minimum_required (VERSION 3.30)
+# Only have Release and Debug configurations
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo" CACHE STRING "" FORCE)
 
 project ("RKGK")
 

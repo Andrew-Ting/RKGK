@@ -21,9 +21,15 @@ public:
 	};
 	EngineStats engineStatistics;
 
-	void init();
-	void run();
-	void cleanup();
+	VulkanEngine() {
+		init();
+	}
+
+	~VulkanEngine() {
+		cleanup();
+	}
+
+	void renderFrame(const std::vector<SDL_Event>& sdlEvents);
 
 private:
 	VkExtent2D mWindowExtent{ 1700 , 900 }; // window size
@@ -60,6 +66,9 @@ private:
 	// resources for initial drawing of frame (i.e. before up/downscaling)
 	AllocatedImage mDrawImage;
 	VkExtent2D mDrawExtent; // actual resolution with which we render frames
+
+	void init();
+	void cleanup();
 
 	void init_sdl();
 	void init_vulkan();

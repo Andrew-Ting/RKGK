@@ -30,73 +30,69 @@ void VulkanEngine::init()
 
 	init_pipelines();
 
+#if ENABLE_IMGUI
 	init_imgui();
-
+#endif
 }
 
-void VulkanEngine::run() {
-	SDL_Event sdlEvent;
+void VulkanEngine::renderFrame(const std::vector<SDL_Event>& sdlEvents) {
 	bool bQuitEngine = false;
 
-	//main loop
-	while (!bQuitEngine)
-	{
-		// clock at frame beginning
-		auto start = std::chrono::system_clock::now();
-		//Handle events on queue
-		while (SDL_PollEvent(&sdlEvent) != 0)
-		{
-			//close the window when user alt-f4s or clicks the X button			
-			if (sdlEvent.type == SDL_EVENT_QUIT)
-				bQuitEngine = true;
-			if (sdlEvent.type == SDL_EVENT_WINDOW_MINIMIZED) {
-				mStopRendering = true;
-			}
-			if (sdlEvent.type == SDL_EVENT_WINDOW_RESTORED) {
-				mStopRendering = false;
-			}
+	// clock at frame beginning
+	auto start = std::chrono::system_clock::now();
 
-			//send SDL event to imgui for handling
-			ImGui_ImplSDL3_ProcessEvent(&sdlEvent);
+	for (const SDL_Event sdlEvent : sdlEvents) {
+		if (sdlEvent.type == SDL_EVENT_WINDOW_MINIMIZED) {
+			mStopRendering = true;
+		}
+		if (sdlEvent.type == SDL_EVENT_WINDOW_RESTORED) {
+			mStopRendering = false;
 		}
 
-		// do not draw if the window is minimized
-		if (mStopRendering) {
-			// throttle the speed to avoid endless spinning
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			continue;
-		}
-
-		if (mSwapchainResizeRequested) {
-			resize_swapchain();
-		}
-
-		// imgui new frame
-		ImGui_ImplVulkan_NewFrame();
-		ImGui_ImplSDL3_NewFrame();
-		ImGui::NewFrame();
-		// Make this frame a dockspace (i.e. anchorable around the render window)
-		ImGui::DockSpaceOverViewport();
-
-		if (ImGui::Begin("Statistics")) {
-			ImGui::Text("Frame Time: %f ms", engineStatistics.frametime);
-		}
-
-		ImGui::End();
-
-		//make imgui calculate internal draw structures
-		ImGui::Render();
-
-		draw();
-
-		// clock at frame end
-		auto end = std::chrono::system_clock::now();
-
-		// compute frame time in milliseconds
-		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-		engineStatistics.frametime = elapsed.count() / 1000.f;
-
+#if ENABLE_IMGUI
+		//send SDL event to imgui for handling
+		ImGui_ImplSDL3_ProcessEvent(&sdlEvent);
+#endif
 	}
+	
+
+	// do not draw if the window is minimized
+	if (mStopRendering) {
+		return;
+	}
+
+	if (mSwapchainResizeRequested) {
+		resize_swapchain();
+	}
+
+
+#if ENABLE_IMGUI
+	// imgui new frame
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplSDL3_NewFrame();
+	ImGui::NewFrame();
+	// Make this frame a dockspace (i.e. anchorable around the render window)
+	ImGui::DockSpaceOverViewport(0, 0, ImGuiDockNodeFlags_PassthruCentralNode);
+	
+	if (ImGui::Begin("Statistics")) {
+		ImGui::Text("Frame Render Time: %f ms", engineStatistics.frametime);
+	}
+
+	ImGui::End();
+	
+	//make imgui calculate internal draw structures
+	ImGui::Render();
+#endif
+
+	draw();
+
+	// clock at frame end
+	auto end = std::chrono::system_clock::now();
+
+	// compute frame time in milliseconds
+	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+	engineStatistics.frametime = elapsed.count() / 1000.f;
+
 }
 
 void VulkanEngine::cleanup()
@@ -514,14 +510,18 @@ void VulkanEngine::draw()
 	vkutil::transition_image(frameDrawCommandBuffer, mSwapchainImages[swapchainImageIndex], 1, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 	vkutil::copy_image_to_image(frameDrawCommandBuffer, mDrawImage.image, mSwapchainImages[swapchainImageIndex], mDrawExtent, mSwapchainExtent);
 
+
+#if ENABLE_IMGUI
 	// set swapchain image layout to color attachment so IMGUI can write over it
 	vkutil::transition_image(frameDrawCommandBuffer, mSwapchainImages[swapchainImageIndex], 1, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-
 	// draw imgui into the swapchain image
 	draw_imgui(frameDrawCommandBuffer, mSwapchainImageViews[swapchainImageIndex]);
-
 	// set swapchain image layout to present so the swapchain can present it
 	vkutil::transition_image(frameDrawCommandBuffer, mSwapchainImages[swapchainImageIndex], 1, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+#else
+	// set swapchain image layout to present so the swapchain can present it
+	vkutil::transition_image(frameDrawCommandBuffer, mSwapchainImages[swapchainImageIndex], 1, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+#endif
 
 	//finalize the command buffer (we can no longer add commands, but it can now be executed)
 	VK_CHECK(vkEndCommandBuffer(frameDrawCommandBuffer));
