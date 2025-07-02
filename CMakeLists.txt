@@ -18,6 +18,7 @@ set (VOLK_DIR third_party/vulkan_deps/volk)
 set (VKB_DIR third_party/vulkan_deps/vkbootstrap/src)
 set (GLM_DIR third_party/glm) # glm adds itself as an include directory
 set (SDL_DIR third_party/SDL)
+set (ASSIMP_DIR third_party/assimp)
 
 # include directories
 set (VOLK_INCLUDE_DIR third_party/vulkan_deps/volk)
@@ -28,6 +29,7 @@ set (SDL_INCLUDE_DIR third_party/SDL/include)
 
 add_subdirectory(${GLM_DIR})
 add_subdirectory(${SDL_DIR})
+add_subdirectory(${ASSIMP_DIR})
 
 # Volk setup
 add_library(Volk STATIC ${VOLK_DIR}/volk.c)
@@ -69,7 +71,7 @@ function(assign_folder_to_targets_in_dir folder_name)
 endfunction()
 
 # Capture all current targets (defined after adding the subdirectory)
-assign_folder_to_targets_in_dir(Dependencies ${GLM_DIR}/glm ${SDL_DIR})
+assign_folder_to_targets_in_dir(Dependencies ${GLM_DIR}/glm ${SDL_DIR} ${ASSIMP_DIR} ${ASSIMP_DIR}/code ${ASSIMP_DIR}/contrib/zlib)
 set_target_properties(Imgui PROPERTIES FOLDER Dependencies)
 set_target_properties(Vkbootstrap PROPERTIES FOLDER Dependencies)
 set_target_properties(Volk PROPERTIES FOLDER Dependencies)

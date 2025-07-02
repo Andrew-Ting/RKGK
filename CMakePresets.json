@@ -19,7 +19,11 @@
                 "SDL_RENDER_METAL": "OFF",
                 "SDL_SHARED": "OFF",
                 "SDL_STATIC": "ON",
-                "SDL_TEST_LIBRARY": "OFF"
+                "SDL_TEST_LIBRARY": "OFF",
+                "BUILD_SHARED_LIBS": "OFF",
+                "ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT": "OFF",
+                "ASSIMP_BUILD_TESTS": "OFF",
+                "ASSIMP_INSTALL": "OFF"
             }
         }
     ]
