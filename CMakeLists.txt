@@ -26,6 +26,7 @@ set (VKB_INCLUDE_DIR third_party/vulkan_deps/vkbootstrap/src)
 set (VMA_INCLUDE_DIR third_party/vulkan_deps/vma/include) # vma is a header only library
 set (VULKAN_INCLUDE_DIR third_party/vulkan_deps/vulkan_headers/include) # volk does the pointing to GPU commands; we only need the vulkan headers
 set (SDL_INCLUDE_DIR third_party/SDL/include)
+set (ASSIMP_INCLUDE_DIR third_party/assimp/include)
 
 add_subdirectory(${GLM_DIR})
 add_subdirectory(${SDL_DIR})
