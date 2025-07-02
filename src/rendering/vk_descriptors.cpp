@@ -43,8 +43,8 @@ VkDescriptorPool DescriptorAllocatorGrowable::get_descriptor_allocation_pool(VkD
 VkDescriptorPool DescriptorAllocatorGrowable::create_pool(VkDevice device, uint32_t setCount, std::span<PoolSizeRatio> poolRatios)
 {
     std::vector<VkDescriptorPoolSize> poolSizes;
-    // conservative; we assume on the worst case each allocated descriptor set only contains one descriptor, in which case set count = # of descriptors
-    // if you can guarantee your descriptor sets have > 1 descriptor, you can lower maxSets and be more memory optimized; this is not implemented here
+    // conservative; we assume on the worst case each allocated descriptor set contains all the specified ratio of descriptors, in which case set count * sum of ratios = # of descriptors
+    // if you have a tighter bound on total number of descriptors allocated, you can use it to allocate less descriptors in the pool and be more memory optimized; this is not implemented here
     for (PoolSizeRatio ratio : poolRatios) {
         poolSizes.push_back(VkDescriptorPoolSize{
             .type = ratio.type,
@@ -52,15 +52,15 @@ VkDescriptorPool DescriptorAllocatorGrowable::create_pool(VkDevice device, uint3
         });
     }
 
-    VkDescriptorPoolCreateInfo pool_info = {};
-    pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    pool_info.flags = 0;
-    pool_info.maxSets = setCount;
-    pool_info.poolSizeCount = (uint32_t)poolSizes.size();
-    pool_info.pPoolSizes = poolSizes.data();
+    VkDescriptorPoolCreateInfo poolInfo = {};
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.flags = 0;
+    poolInfo.maxSets = setCount;
+    poolInfo.poolSizeCount = (uint32_t)poolSizes.size();
+    poolInfo.pPoolSizes = poolSizes.data();
 
     VkDescriptorPool newPool;
-    VK_CHECK(vkCreateDescriptorPool(device, &pool_info, nullptr, &newPool));
+    VK_CHECK(vkCreateDescriptorPool(device, &poolInfo, nullptr, &newPool));
     return newPool;
 }
 
@@ -118,4 +118,38 @@ VkDescriptorSet DescriptorAllocatorGrowable::allocate(VkDevice device, VkDescrip
 
     mReadyPools.push_back(poolToUse);
     return ds;
+}
+
+void DescriptorLayoutBuilder::add_binding(uint32_t binding, VkDescriptorType type)
+{
+    VkDescriptorSetLayoutBinding newbind{};
+    newbind.binding = binding;
+    newbind.descriptorCount = 1;
+    newbind.descriptorType = type;
+
+    bindings.push_back(newbind);
+}
+
+void DescriptorLayoutBuilder::clear()
+{
+    bindings.clear();
+}
+
+VkDescriptorSetLayout DescriptorLayoutBuilder::build(VkDevice device, VkShaderStageFlags shaderStages, void* pNext, VkDescriptorSetLayoutCreateFlags flags)
+{
+    for (auto& b : bindings) {
+        b.stageFlags |= shaderStages;
+    }
+
+    VkDescriptorSetLayoutCreateInfo info = { .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
+    info.pNext = pNext;
+
+    info.pBindings = bindings.data();
+    info.bindingCount = (uint32_t)bindings.size();
+    info.flags = flags;
+
+    VkDescriptorSetLayout set;
+    VK_CHECK(vkCreateDescriptorSetLayout(device, &info, nullptr, &set));
+
+    return set;
 }

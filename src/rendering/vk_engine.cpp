@@ -12,6 +12,7 @@
 #include "vk_engine.h"
 #include "vk_initializers.h"
 #include "vk_utils.h"
+#include "passes/SketchPass.h"
 
 void VulkanEngine::init()
 {
@@ -25,8 +26,6 @@ void VulkanEngine::init()
 	init_commands();
 
 	init_sync_structures();
-
-	init_descriptors();
 
 	init_pipelines();
 
@@ -102,6 +101,7 @@ void VulkanEngine::cleanup()
 
 	//destroy per frame resources
 	for (int i = 0; i < FRAMES_IN_FLIGHT; i++) {
+		mFrames[i].mRenderPasses.clear();
 		mFrames[i].mDeletionQueue.flush();
 	}
 	// destroy global engine resources
@@ -341,10 +341,17 @@ void VulkanEngine::init_sync_structures() {
 	});
 }
 
-void VulkanEngine::init_descriptors() {
-}
 
-void VulkanEngine::init_pipelines() {
+void VulkanEngine::init_pipelines()
+{
+
+	for (int i = 0; i < FRAMES_IN_FLIGHT; i++) {
+		mFrames[i].mRenderPasses["SketchPass"] = std::make_unique<SketchPass>(SketchPass(mLogicalDevice));
+	}
+	for (int i = 0; i < FRAMES_IN_FLIGHT; i++) {
+		for (auto& renderPass : mFrames[i].mRenderPasses)
+			renderPass.second->init();
+	}
 }
 
 void VulkanEngine::init_imgui() {

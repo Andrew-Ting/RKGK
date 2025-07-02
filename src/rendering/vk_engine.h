@@ -13,7 +13,7 @@ class VulkanEngine {
 
 public:
 	inline static const int FRAMES_IN_FLIGHT = 2;
-	inline static const char* ENGINE_NAME = "Sunaba";
+	inline static const char* ENGINE_NAME = "RKGK";
 	inline static const double RENDER_SCALE = 1.0f;
 
 	struct EngineStats {
@@ -75,7 +75,6 @@ private:
 	void init_swapchain();
 	void init_commands();
 	void init_sync_structures();
-	void init_descriptors();
 	void init_pipelines();
 	void init_imgui();
 
