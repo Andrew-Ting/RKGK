@@ -24,7 +24,7 @@ void SketchPass::init_pipeline()
 
 }
 
-void SketchPass::internal_draw(VkCommandBuffer commandBuffer)
+void SketchPass::internal_draw(VkCommandBuffer commandBuffer, const std::string& filePath)
 {
 
 }

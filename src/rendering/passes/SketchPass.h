@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RenderPass.h"
+#include "../assimp/AssimpModelParser.h"
 
 class SketchPass : public RenderPass {
 public:
@@ -15,7 +16,8 @@ public:
 	~SketchPass() override;
 private:
 	VkDescriptorSetLayout mSketchDescriptorSetLayout{};
+	AssimpModelParser mModelParser;
 	void init_descriptors() override;
 	void init_pipeline() override;
-	void internal_draw(VkCommandBuffer commandBuffer) override;
+	void internal_draw(VkCommandBuffer commandBuffer, const std::string& filePath) override;
 };

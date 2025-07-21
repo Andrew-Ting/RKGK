@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <filesystem>
 #include "../vk_descriptors.h"
 class RenderPass {
 
@@ -22,17 +23,21 @@ public:
 	}
 	virtual void init_descriptors() = 0;
 	virtual void init_pipeline() = 0;
-	void draw(VkCommandBuffer commandBuffer)
+	void draw(VkCommandBuffer commandBuffer, const std::string& filePath)
 	{
 		if (!mInitialized)
 		{
 			throw std::logic_error("RenderPass must be initialized before recording it on a command buffer");
 		}
-		internal_draw(commandBuffer);
+		if (!std::filesystem::exists(filePath))
+		{
+			throw std::runtime_error("The file path does not point to an existing file");
+		}
+		internal_draw(commandBuffer, filePath);
 	}
 protected:
 	VkDevice& mLogicalDevice;
 	DescriptorAllocatorGrowable mDescriptorPool;
 	bool mInitialized = false;
-	virtual void internal_draw(VkCommandBuffer commandBuffer) = 0;
+	virtual void internal_draw(VkCommandBuffer commandBuffer, const std::string& filePath) = 0;
 };
